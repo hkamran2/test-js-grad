@@ -38,9 +38,33 @@ The results should have this structure:
  * NOTE: the parent array and each "packageNames" array should 
  * be in alphabetical order.
  */
-
+const axios = require('axios');
 module.exports = async function organiseMaintainers() {
-  // TODO
+  const response = await axios.post('http://ambush-api.inyourarea.co.uk/ambush/intercept', {
+    url: "https://api.npms.io/v2/search/suggestions?q=react",
+    method: "GET",
+    return_payload: true
+  });
 
-  return maintainers
+  const content = response.data.content
+
+  const map = new Map();
+  content.forEach(el => {
+    const objPackage = el.package;
+    const { name } = objPackage;
+    const packageMaintainers = objPackage.maintainers.map(m => m.username);
+
+    packageMaintainers.forEach(maintainer => {
+      if (!map.has(maintainer)) {
+        map.set(maintainer, [name]);
+      } else {
+        const packages = map.get(maintainer);
+        packages.push(name);
+        packages.sort();
+        map.set(maintainer, packages);
+      }
+    });
+  });
+
+  return [...map].map(([name, value]) => ({ username: name, packageNames: value })).sort((a, b) => a.username.localeCompare(b.username));
 };

@@ -27,9 +27,13 @@ The results should have this structure:
  *  With the results from this request, inside "content", return
  *  the "name" of the package that has the oldest "date" value
  */
-
-module.exports = async function oldestPackageName() {
-  // TODO
-
-  return name
-};
+ const axios = require('axios');
+ module.exports = async function oldestPackageName() {
+   const {data} = await axios.post('http://ambush-api.inyourarea.co.uk/ambush/intercept', {
+     url: "https://api.npms.io/v2/search/suggestions?q=react",
+     method: "GET",
+     return_payload: true
+   });
+   
+   return data.content.sort((a, b) => a.package.date.localeCompare(b.package.date)).shift().package.name;
+ };
